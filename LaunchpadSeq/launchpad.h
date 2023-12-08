@@ -23,6 +23,11 @@ typedef enum LaunchpadViewMode {
 	kLaunchpadViewMode_Settings = 3
 } LaunchpadViewMode;
 
+typedef enum LaunchpadSequenceViewMode {
+	kLaunchpadSequenceViewMode_Paginated = 0,
+	kLaunchpadSequenceViewMode_Grid = 1,
+}LaunchpadSequenceViewMode;
+
 typedef enum LaunchpadVersion {
 	kLaunchpadVersion_MK1 = 1,
 	kLaunchpadVersion_MK2 = 2,
@@ -31,10 +36,12 @@ typedef enum LaunchpadVersion {
 
 typedef struct launchpad_t {
 	uint8_t 					page_index;
+	uint8_t						trigger_index;
 	bool						shift_btn_hold;
 	bool						clear_btn_hold;
 	step_sequencer_t *			sequencer;
 	LaunchpadViewMode           current_view_mode;
+	LaunchpadSequenceViewMode	sequence_view_mode;
 	uint8_t						current_sequence_index;
 	bool						auto_follow_sequence;
 	
@@ -51,10 +58,10 @@ void 			ls_updateRow(launchpad_t * l, uint8_t rowIndex);							//sends 8 MIDI me
 void 			ls_updateGrid(launchpad_t * l);												//sends 64 MIDI messages
 void 			ls_updateFnButtons(launchpad_t * l);										//sends 8 MIDI messages
 void 			ls_updateOutColumn(launchpad_t * l);										//sends 8 MIDI messages
-void 			ls_setFunctionButton(launchpad_t * l, uint16_t btnIndex, uint8_t color);	//sends 1 MIDI messages
+void 			ls_setExtButton(launchpad_t * l, uint16_t btnIndex, uint8_t color);	//sends 1 MIDI messages
 void			ls_setCurrentSequenceIndex(launchpad_t * l, uint8_t sequenceIndex);
 void 			ls_incrPageIndex(launchpad_t * l, int8_t value);
-
+void 			ls_setPatternViewMode(launchpad_t * l, LaunchpadSequenceViewMode newMode);
 // Utilities
 uint16_t 		ls_btnMapValue(SLMIDIPacket *packet);
 bool 			ls_btnIsDown(SLMIDIPacket * packet);

@@ -177,11 +177,11 @@ bool processFunButton(SLMIDIPacket *packet) {
 	
 	if (ls_btnMapValue(packet) == LS_BT_SHIFT) {
 		ls.shift_btn_hold = ls_btnIsDown(packet);
-		ls_setFunctionButton(&ls, LS_BT_SHIFT, ls_btnIsDown(packet) ? LS_COLOR_YELLOW : LS_COLOR_NONE);
+		ls_setExtButton(&ls, LS_BT_SHIFT, ls_btnIsDown(packet) ? LS_COLOR_YELLOW : LS_COLOR_NONE);
 	} else if (ls_btnMapValue(packet) == LS_BT_CLEAR) {
 		
 		ls.clear_btn_hold = ls_btnIsDown(packet);
-		ls_setFunctionButton(&ls, LS_BT_CLEAR, ls_btnIsDown(packet) ? LS_COLOR_RED : LS_COLOR_NONE);
+		ls_setExtButton(&ls, LS_BT_CLEAR, ls_btnIsDown(packet) ? LS_COLOR_RED : LS_COLOR_NONE);
 		
 		if (ls.shift_btn_hold && ls.clear_btn_hold) {
 			seq_clearAllPatterns(getCurrentSequenceLS());
