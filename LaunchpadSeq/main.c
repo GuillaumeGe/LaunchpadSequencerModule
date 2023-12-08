@@ -77,14 +77,25 @@ void wrap_sq_updateMutedTriggers(void *s, uint8_t triggerIndex) {
 
 void wrap_sq_updatePattern(void *s, uint8_t sequenceIndex, uint8_t pI) {
 	if (ls.current_sequence_index == sequenceIndex) {
-		ls_updateRow(&ls, pI);
+		if (ls.sequence_view_mode == kLaunchpadSequenceViewMode_Paginated) {
+			ls_updateRow(&ls, pI);
+		} else {
+			ls_updateGrid(&ls);
+		}
 	}
 }
 
 void wrap_sq_updateStep(void * s, uint8_t sequenceIndex, uint8_t pI, uint8_t stepIndex) {
-	if (ls.current_sequence_index == sequenceIndex) {
-		ls_updateCell(&ls, stepIndex % LS_MAX_STEPS_PER_ROW, pI);
+	if (ls.sequence_view_mode == kLaunchpadSequenceViewMode_Paginated) {
+		if (ls.current_sequence_index == sequenceIndex) {
+			ls_updateCell(&ls, stepIndex % LS_MAX_STEPS_PER_ROW, pI);
+		}
+	} else if (ls.sequence_view_mode == kLaunchpadSequenceViewMode_Grid) {
+		if (ls.current_sequence_index == sequenceIndex && pI == ls.trigger_index) {
+			ls_updateCell(&ls, stepIndex % LS_MAX_STEPS_PER_ROW, stepIndex / LS_MAX_STEPS_PER_ROW);
+		}
 	}
+	
 }
 
 void wrap_sq_updateState(void * s) {
@@ -125,13 +136,7 @@ void wrap_ls_midi_snd(SLMIDIPacket * pkt, uint8_t channel) {
 		
 		// Create a MIDIPacket within the packetList
 		packet = MIDIPacketListAdd(packetlist, sizeof(buffer), packet, timestamp, 3, pkt->data);
-#if DEBUG
-//		printf("SENDING: len: %d \t%02X %02X %02X\n",
-//			   packet->length,
-//			   packet->data[0],
-//			   packet->data[1],
-//			   packet->data[2]);
-#endif
+
 		// Check if the packet was added successfully
 		if (packet != NULL) {
 			// Send the packet list using MIDISend
@@ -148,9 +153,7 @@ void wrap_ls_midi_rcv(SLMIDIPacket * packet) {
 		return;
 	}
 	
-	
 	if (packet->length >= 3) {
-		
 		//--------
 		if (!processFunButton(packet) && !processColButton(packet)) {
 			processGridButton(packet);
@@ -227,12 +230,17 @@ bool processColButton(SLMIDIPacket *packet) {
 		 */
 		uint16_t v = 0x90 << 8 | i << 4 | 0x08;
 		if (ls_btnMapValue(packet) == v && ls_btnIsDown(packet)) {
-			if (ls.clear_btn_hold) {
-				seq_clearPattern(getCurrentSequenceLS(), i);
-			}
-			
-			if (ls.current_view_mode == kLaunchpadViewMode_Mute) {
-				sequencer_setMutedPattern(&sequencer, i, !sequencer.muted_triggers[i]);
+			if (ls.sequence_view_mode == kLaunchpadSequenceViewMode_Paginated) {
+				if (ls.clear_btn_hold) {
+					seq_clearPattern(getCurrentSequenceLS(), i);
+				}
+				
+				if (ls.current_view_mode == kLaunchpadViewMode_Mute) {
+					sequencer_setMutedPattern(&sequencer, i, !sequencer.muted_triggers[i]);
+				}
+			} else {
+				ls.trigger_index = i;
+				ls_updateDisplay(&ls);
 			}
 			
 			return true;
@@ -256,10 +264,10 @@ bool processGridButton(SLMIDIPacket *packet) {
 				case kLaunchpadViewMode_Mute:
 					if (!ls.shift_btn_hold) {
 						//toggle one step
-						seq_togglePatternStepValue(getCurrentSequenceLS(), y, x + (ls.page_index * LS_MAX_STEPS_PER_ROW));
+						ls_toggleStep(&ls, x, y);
 					} else {
 						//determines the last step
-						seq_setLastStepIndex(getCurrentSequenceLS(), y, x + (ls.page_index * LS_MAX_STEPS_PER_ROW) + 1);
+						ls_updateLastStepIndex(&ls, x, y);
 					}
 					break;
 				case kLaunchpadViewMode_Sequence:
@@ -291,7 +299,7 @@ step_sequence_t * getCurrentSequenceSQ(void) {
 }
 
 step_sequence_t * getCurrentSequenceLS(void) {
-	return &sequencer.sequences[ls.current_sequence_index];
+	return ls_getCurrentSequence(&ls);
 }
 
 // --- Interrupts ---
@@ -364,14 +372,8 @@ static void midi_read_callback(const MIDIPacketList *evtList, void *refCon, void
 		MIDIPacket *packet = (MIDIPacket *)evtList->packet;
 		
 		for (size_t j = 0; j < evtList->numPackets; ++j) {
-			// go through each pkt bytes
-			
 			SLMIDIPacket *pkt = (SLMIDIPacket *)packet;
-			
 			wrap_ls_midi_rcv(pkt);
-		
-			//packet->data[2] = LS_COLOR_YELLOW - 0x08;
-			
 			packet = MIDIPacketNext(packet);
 		}
 	}
@@ -391,24 +393,6 @@ int main(int argc, const char * argv[]) {
 	int i, n;
 	CFStringRef pname, pmanuf, pmodel;
 	char name[64], manuf[64], model[64];
-
-//	n = (int)MIDIGetNumberOfDevices();
-//	for (i = 0; i < n; ++i) {
-//		MIDIDeviceRef dev = MIDIGetDevice(i);
-//
-//		MIDIObjectGetStringProperty(dev, kMIDIPropertyName, &pname);
-//		MIDIObjectGetStringProperty(dev, kMIDIPropertyManufacturer, &pmanuf);
-//		MIDIObjectGetStringProperty(dev, kMIDIPropertyModel, &pmodel);
-//
-//		CFStringGetCString(pname, name, sizeof(name), 0);
-//		CFStringGetCString(pmanuf, manuf, sizeof(manuf), 0);
-//		CFStringGetCString(pmodel, model, sizeof(model), 0);
-//		CFRelease(pname);
-//		CFRelease(pmanuf);
-//		CFRelease(pmodel);
-//
-//		printf("name=%s, manuf=%s, model=%s\n", name, manuf, model);
-//	}
 
 	// open connections from all sources
 	n = (int)MIDIGetNumberOfSources();
@@ -441,7 +425,7 @@ int main(int argc, const char * argv[]) {
 	
 	if (timer) {
 		// Set the time interval for the timer (in nanoseconds)
-		uint64_t interval = NSEC_PER_SEC * 0.125 / 3; // 1 second
+		uint64_t interval = NSEC_PER_SEC * 0.06 / 3; // 1 second
 		dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, 0), interval, 0);
 		
 		// Define the event handler block for the timer

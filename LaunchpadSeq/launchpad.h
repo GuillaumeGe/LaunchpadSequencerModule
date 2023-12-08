@@ -12,6 +12,7 @@
 #include "midi.h"
 
 typedef struct step_sequencer_t step_sequencer_t;
+typedef struct step_sequence_t step_sequence_t;
 
 #define IS_HIGH(value)          value > 0
 
@@ -49,21 +50,24 @@ typedef struct launchpad_t {
 	void 						(*midi_rcv_cb)(SLMIDIPacket * pkt);
 } launchpad_t;
 
-void 			ls_init(launchpad_t * l, step_sequencer_t * seq);
+void 						ls_init(launchpad_t * l, step_sequencer_t * seq);
+void 						ls_updateDisplay(launchpad_t * l);
+void 						ls_updateCell(launchpad_t * l, uint8_t x, uint8_t y);						//sends 1 MIDI messages
+void 						ls_updateRow(launchpad_t * l, uint8_t rowIndex);							//sends 8 MIDI messages
+void 						ls_updateGrid(launchpad_t * l);												//sends 64 MIDI messages
+void 						ls_updateFnButtons(launchpad_t * l);										//sends 8 MIDI messages
+void 						ls_updateOutColumn(launchpad_t * l);										//sends 8 MIDI messages
+void 						ls_setExtButton(launchpad_t * l, uint16_t btnIndex, uint8_t color);			//sends 1 MIDI messages
+void 						ls_setGridButton(launchpad_t * l, uint8_t x, uint8_t y, uint8_t color);		//sends 1 MIDI messages
+void						ls_setCurrentSequenceIndex(launchpad_t * l, uint8_t sequenceIndex);
+void 						ls_incrPageIndex(launchpad_t * l, int8_t value);
+void 						ls_setSequenceViewMode(launchpad_t * l, LaunchpadSequenceViewMode newMode);
+void 						ls_updateLastStepIndex(launchpad_t * l, uint8_t x, uint8_t y);
+void 						ls_toggleStep(launchpad_t * l, uint8_t x, uint8_t y);
 
-// COM
-void 			ls_updateDisplay(launchpad_t * l);
-void 			ls_updateCell(launchpad_t * l, uint8_t x, uint8_t y);						//sends 1 MIDI messages
-void 			ls_updateRow(launchpad_t * l, uint8_t rowIndex);							//sends 8 MIDI messages
-void 			ls_updateGrid(launchpad_t * l);												//sends 64 MIDI messages
-void 			ls_updateFnButtons(launchpad_t * l);										//sends 8 MIDI messages
-void 			ls_updateOutColumn(launchpad_t * l);										//sends 8 MIDI messages
-void 			ls_setExtButton(launchpad_t * l, uint16_t btnIndex, uint8_t color);	//sends 1 MIDI messages
-void			ls_setCurrentSequenceIndex(launchpad_t * l, uint8_t sequenceIndex);
-void 			ls_incrPageIndex(launchpad_t * l, int8_t value);
-void 			ls_setPatternViewMode(launchpad_t * l, LaunchpadSequenceViewMode newMode);
 // Utilities
-uint16_t 		ls_btnMapValue(SLMIDIPacket *packet);
-bool 			ls_btnIsDown(SLMIDIPacket * packet);
+step_sequence_t * 			ls_getCurrentSequence(launchpad_t * l);
+uint16_t 					ls_btnMapValue(SLMIDIPacket *packet);
+bool 						ls_btnIsDown(SLMIDIPacket * packet);
 
 #endif /* launchpad_h */

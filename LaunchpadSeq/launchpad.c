@@ -12,17 +12,14 @@
 #include "utils.h"
 
 void ls_init(launchpad_t * l, step_sequencer_t * seq) {
-	l->page_index = 0;
-	l->trigger_index = 0;
 	l->shift_btn_hold = false;
 	l->clear_btn_hold = false;
 	l->sequencer = seq;
 	l->auto_follow_sequence = true;
-	l->sequence_view_mode = kLaunchpadSequenceViewMode_Paginated;
+	ls_setSequenceViewMode(l, kLaunchpadSequenceViewMode_Grid);
 	
 	if (seq != NULL) {
 		l->current_sequence_index = l->sequencer->current_sequence_index;
-		//l->current_sequence_index = 2;
 	}
 }
 
@@ -208,10 +205,11 @@ SLMIDIPacket * _createPacket_updateCellPaginated(launchpad_t * l, uint8_t x, uin
 	const bool channelMuted = sequencer->muted_triggers[patternIndex];
 	const uint8_t bckColor = l->current_view_mode == kLaunchpadViewMode_Pattern ? 0x0D : LS_COLOR_NONE;
 	const uint8_t stepIndex = x + (l->page_index * LS_MAX_STEPS_PER_ROW);
-	const uint8_t stepValue = pattern->steps[stepIndex];
+	
 	
 	//let's check if we are in range first
 	if (stepIndex >= (l->page_index * LS_MAX_STEPS_PER_ROW) && stepIndex < LS_MAX_STEPS_PER_ROW + (l->page_index * LS_MAX_STEPS_PER_ROW)) {
+		const uint8_t stepValue = pattern->steps[stepIndex];
 		//are we in range of last step ?
 		if (stepIndex < cs->last_step_indexes[patternIndex]) {
 			if (isPlayingSequenceDisplayed && stepIndex == cs->current_step_indexes[patternIndex]) {
@@ -264,7 +262,13 @@ SLMIDIPacket * _createPacket_updateCellGrid(launchpad_t * l, uint8_t x, uint8_t 
 				color = LS_COLOR_GREEN;
 			} else {
 				if (stepIndex < lastStepIndex) {
-					color = LS_COLOR_LOW_RED;
+					if (stepIndex % 4 == 0) {
+						color = 0x0F;
+					} else if (stepIndex % 2 == 0) {
+						color = 0x0E;
+					} else {
+						color = LS_COLOR_LOW_RED;
+					}
 				}
 			}
 		}
@@ -319,7 +323,7 @@ void ls_updateCell(launchpad_t * l, uint8_t x, uint8_t y) {
 
 // --- UPDATES ---
 
-void ls_updateDisplay(launchpad_t * l) {
+void ls_updateGrid(launchpad_t * l) {
 	switch (l->current_view_mode) {
 		case kLaunchpadViewMode_Pattern:
 		case kLaunchpadViewMode_Mute:
@@ -360,12 +364,15 @@ void ls_updateDisplay(launchpad_t * l) {
 		default:
 			break;
 	}
-	
+}
+
+void ls_updateDisplay(launchpad_t * l) {
+	ls_updateGrid(l);
 	ls_updateFnButtons(l);
 	ls_updateOutColumn(l);
 }
 
-void ls_setPatternViewMode(launchpad_t * l, LaunchpadSequenceViewMode newMode) {
+void ls_setSequenceViewMode(launchpad_t * l, LaunchpadSequenceViewMode newMode) {
 	if (newMode != l->sequence_view_mode) {
 		l->sequence_view_mode = newMode;
 		l->trigger_index = 0;
@@ -374,3 +381,27 @@ void ls_setPatternViewMode(launchpad_t * l, LaunchpadSequenceViewMode newMode) {
 	}
 }
 
+void ls_updateLastStepIndex(launchpad_t * l, uint8_t x, uint8_t y) {
+	if (l->sequence_view_mode == kLaunchpadSequenceViewMode_Paginated) {
+		seq_setLastStepIndex(ls_getCurrentSequence(l), y, x + (l->page_index * LS_MAX_STEPS_PER_ROW) + 1);
+	} else {
+		seq_setLastStepIndex(ls_getCurrentSequence(l), l->trigger_index, ((x  + 1) + LS_MAX_STEPS_PER_ROW * y));
+	}
+}
+
+void ls_toggleStep(launchpad_t * l, uint8_t x, uint8_t y) {
+	if (l->sequence_view_mode == kLaunchpadSequenceViewMode_Paginated) {
+		seq_togglePatternStepValue(ls_getCurrentSequence(l), y, x + (l->page_index * LS_MAX_STEPS_PER_ROW));
+	} else {
+		seq_togglePatternStepValue(ls_getCurrentSequence(l), l->trigger_index, x + LS_MAX_STEPS_PER_ROW * y);
+	}
+}
+
+step_sequence_t * ls_getCurrentSequence(launchpad_t * l) {
+	if (l->sequencer == NULL) {
+		return NULL;
+	}
+	
+	return &l->sequencer->sequences[l->current_sequence_index];
+
+}
