@@ -37,7 +37,6 @@
 		F096900F2B18E8D5003313C0 /* sequence.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sequence.c; sourceTree = "<group>"; };
 		F09690112B18EA42003313C0 /* pattern.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pattern.h; sourceTree = "<group>"; };
 		F09690122B18EAFA003313C0 /* pattern.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pattern.c; sourceTree = "<group>"; };
-		F09690152B18FBC5003313C0 /* io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = io.h; sourceTree = "<group>"; };
 		F09690162B19063D003313C0 /* utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
 		F0A362A42AC9E74300106CC8 /* LaunchpadSeq */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LaunchpadSeq; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0A362A72AC9E74300106CC8 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
@@ -86,7 +85,6 @@
 				F09690062AE0470B003313C0 /* launchpad.h */,
 				F096900A2AE05048003313C0 /* launchpad.c */,
 				F0A362AE2ACA09BA00106CC8 /* launchpad_defs.h */,
-				F09690152B18FBC5003313C0 /* io.h */,
 				F09690162B19063D003313C0 /* utils.h */,
 			);
 			path = LaunchpadSeq;
