@@ -5,6 +5,8 @@
 //  Created by Guillaume Gekière on 01/10/2023.
 //
 
+#ifndef ARDUINO
+
 #include <CoreMIDI/MIDIServices.h>
 #include <CoreFoundation/CFRunLoop.h>
 
@@ -439,6 +441,8 @@ int main(int argc, const char * argv[]) {
 	
 
 	CFRunLoopRun();
-	
+
 	return 0;
 }
+
+#endif /* ARDUINO */
