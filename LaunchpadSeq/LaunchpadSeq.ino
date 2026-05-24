@@ -19,6 +19,10 @@
 
 #include <Arduino.h>
 #include <USBHost_t36.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 extern "C" {
 #include "launchpad.h"
@@ -30,17 +34,19 @@ extern "C" {
 // ── Configuration ────────────────────────────────────────────────────────────
 
 #define DEBUG                1
-#define USE_EXTERNAL_CLOCK   1   // 1 = CLOCK_IN_PIN interrupt, 0 = internal timer
 
+#define USE_EXTERNAL_CLOCK   1   // 1 = CLOCK_IN_PIN interrupt, 0 = internal timer
+#if !USE_EXTERNAL_CLOCK
+    #define INTERNAL_CLOCK_US    20000   // 20 ms → matches original 0.06/3 s interval
+#endif
 #define CLOCK_IN_PIN         2
 #define CLOCK_OUT_PIN        3
 #define RESET_PIN            4
 #define DIR_PIN              5
 
-#define INTERNAL_CLOCK_US    20000   // 20 ms → matches original 0.06/3 s interval
-
-const uint8_t outputs[N_TRIGGERS] = { 30, 31, 32, 33, 34, 35, 36, 37 };
-
+#define SCREEN_WIDTH 128  // OLED display width, in pixels
+#define SCREEN_HEIGHT 32  // OLED display height, in pixels
+#define FONT_SIZE   2
 #define OLED_MOSI   9
 #define OLED_CLK   10
 #define OLED_DC    11
@@ -49,6 +55,9 @@ const uint8_t outputs[N_TRIGGERS] = { 30, 31, 32, 33, 34, 35, 36, 37 };
 #define OLED_RESET -1        // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 
+// ── DISPLAY -─────────────────────────────────────────────────────────────────
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // ── USB Host ─────────────────────────────────────────────────────────────────
 
@@ -69,6 +78,9 @@ IntervalTimer clockTimer;
 // and avoid calling digitalWrite / MIDI send from interrupt context.
 volatile bool pendingClockTick = false;
 volatile bool usbControllerConnected = false;
+
+const uint8_t outputs[N_TRIGGERS] = { 30, 31, 32, 33, 34, 35, 36, 37 };
+
 
 // ── Forward declarations ──────────────────────────────────────────────────────
 
@@ -165,11 +177,12 @@ void wrap_ls_midi_snd(SLMIDIPacket *pkt, uint8_t channel) {
 // ── MIDI receive dispatch ─────────────────────────────────────────────────────
 
 void wrap_ls_midi_rcv(SLMIDIPacket *packet) {
-    printf("test");
-    if (packet == NULL || packet->length < 3) 
+    if (packet == NULL || packet->length < 3) {
       return;
-    if (!processFunButton(packet) && !processColButton(packet))
+    }      
+    if (!processFunButton(packet) && !processColButton(packet)) {
         processGridButton(packet);
+    }
 #if DEBUG
     if (ls_btnIsDown(packet))
         Serial.printf("RECV: %02X %02X %02X\n",
@@ -326,6 +339,47 @@ void dirISR(void) {
         : kDirection_Forward;
 }
 
+// ── DISPLAY  ────────────────────────────────────────────────
+
+void _printCLK(uint8_t value) {
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);              // Start at top-left corner
+  display.setTextSize(FONT_SIZE);               // Draw 2X-scale text
+  display.print(F("CLK_DIV:"));
+    //display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  // Draw 'inverse' text
+  display.print(value);
+  //display.setTextColor(SSD1306_WHITE);
+  //display.print(F(" "));
+
+}
+
+void _printDIR(uint8_t size) {
+  display.setTextColor(SSD1306_WHITE);
+  //display.setCursor(7, 0);              // Start at top-left corner
+  display.setTextSize(FONT_SIZE);               // Draw 2X-scale text
+  display.print(F("DIR:"));
+  
+}
+
+void _printPRESET(uint8_t size) {
+  display.setTextColor(SSD1306_WHITE);
+  //display.setCursor(7, 0);              // Start at top-left corner
+  display.setTextSize(FONT_SIZE);               // Draw 2X-scale text
+  display.print(F("PRESET: "));
+  display.print(F("Custom"));
+}
+
+void drawMainScreen() {
+  display.clearDisplay();
+  
+  _printCLK(sequencer_getClockDivider(&sequencer));
+  _printDIR(0);
+  display.println(F("")); // Break line
+  _printPRESET(1);
+
+  display.display();
+}
+
 // ── Arduino entry points ──────────────────────────────────────────────────────
 
 void setup() {
@@ -359,6 +413,26 @@ void setup() {
     midi1.setHandleNoteOff(onNoteOff);
     midi1.setHandleControlChange(onControlChange);
 
+    // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+    if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+        Serial.println(F("SSD1306 allocation failed"));
+        for (;;)
+        ;  // Don't proceed, loop forever
+    }
+
+    display.setTextSize(FONT_SIZE);
+    display.setRotation(2);
+    // Show initial display buffer contents on the screen --
+    // the library initializes this with an Adafruit splash screen.
+    display.display();
+    display.clearDisplay(); // Clear the buffer
+    display.drawPixel(10, 10, SSD1306_WHITE); // Draw a single pixel in white
+    // Show the display buffer on the screen. You MUST call display() after
+    // drawing commands to make them visible on screen!
+    display.display();
+
+    drawMainScreen();
+
     // Sequencer init
     sequencer_init(&sequencer);
     sequencer.step_updated_cb           = wrap_sq_updateStep;
@@ -383,7 +457,6 @@ void setup() {
     ls_updateDisplay(&ls);
 
     usbControllerConnected = midi1.product() != NULL;
-    printf("%d", midi1.product() != NULL);
 }
 
 void loop() {

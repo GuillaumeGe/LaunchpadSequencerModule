@@ -10,6 +10,7 @@
 #include <string.h>
 #include "utils.h"
 
+
 int sequencer_setTriggerValue(step_sequencer_t* s, size_t index, uint8_t value) {
 	if (index > N_TRIGGERS) {
 		return -1;
@@ -203,6 +204,21 @@ void sequencer_clock(step_sequencer_t * s) {
 	}
 }
 
+int sequencer_setClockDivider(step_sequencer_t * s, uint8_t value) {
+	if (value != s->clock_divider) {
+		s->clock_divider = value;
+
+		if (s->divider_updated_cb != NULL) {
+			s->divider_updated_cb(s);
+		}
+	}
+
+	return 0;
+}
+
+uint8_t sequencer_getClockDivider(step_sequencer_t * s) {
+	return s->clock_divider;
+}
 
 
 int sequencer_setNextSequenceIndex(step_sequencer_t * s, int8_t sequenceIndex) {

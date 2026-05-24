@@ -50,6 +50,7 @@ typedef struct step_sequencer_t {
 	void 						(*step_updated_cb)(void * seq, uint8_t sequence_index, uint8_t patternIndex, uint8_t stepIndex);
 	void 						(*pattern_updated_cb)(void * seq, uint8_t sequence_index, uint8_t patternIndex);
 	void 						(*muted_triggers_updated_cb)(void * seq, uint8_t pattern_index);
+	void 						(*divider_updated_cb)(void * seq);
 	void 						(*direction_updated_cb)(void * seq);
 	void 						(*state_updated_cb)(void * seq);
 	void 						(*sequence_index_updated_cb)(void * sequencer, uint8_t sequence_index);
@@ -64,11 +65,13 @@ void 				sequencer_clock(step_sequencer_t * s);
 void 				sequencer_stop(step_sequencer_t * s);
 void 				sequencer_play(step_sequencer_t * s);
 void 				sequencer_pause(step_sequencer_t * s);
+uint8_t				sequencer_getClockDivider(step_sequencer_t * s);
 uint8_t				sequencer_getCurrentSequenceIndex(step_sequencer_t * s);
 step_sequence_t *	sequencer_getCurrentSequence(step_sequencer_t *s);
 int 				sequencer_setSequenceIndex(step_sequencer_t * s, uint8_t sequenceIndex);
 int					sequencer_setMutedPattern(step_sequencer_t * s, uint8_t patternIndex, bool value);
 int 				sequencer_setNextSequenceIndex(step_sequencer_t * s, int8_t sequenceIndex);
+int 				sequencer_setClockDivider(step_sequencer_t * s, uint8_t value);
 int 				sequencer_load(step_sequencer_t * s);
 void 				sequencer_resetCurrentStepIndexes(step_sequencer_t * s, uint8_t sequence_index);
 
