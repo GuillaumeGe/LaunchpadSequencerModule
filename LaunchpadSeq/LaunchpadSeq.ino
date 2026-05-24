@@ -29,8 +29,8 @@ extern "C" {
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
-#define DEBUG                0
-#define USE_EXTERNAL_CLOCK   0   // 1 = CLOCK_IN_PIN interrupt, 0 = internal timer
+#define DEBUG                1
+#define USE_EXTERNAL_CLOCK   1   // 1 = CLOCK_IN_PIN interrupt, 0 = internal timer
 
 #define CLOCK_IN_PIN         2
 #define CLOCK_OUT_PIN        3
@@ -41,10 +41,20 @@ extern "C" {
 
 const uint8_t outputs[N_TRIGGERS] = { 30, 31, 32, 33, 34, 35, 36, 37 };
 
+#define OLED_MOSI   9
+#define OLED_CLK   10
+#define OLED_DC    11
+#define OLED_CS    12
+//#define OLED_RESET 13
+#define OLED_RESET -1        // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+
+
 // ── USB Host ─────────────────────────────────────────────────────────────────
 
-USBHost    myusb;
-MIDIDevice midi1(myusb);
+USBHost     myusb;
+USBHub      hub1(myusb);
+MIDIDevice  midi1(myusb);
 
 // ── Globals ───────────────────────────────────────────────────────────────────
 
@@ -58,6 +68,7 @@ IntervalTimer clockTimer;
 // Deferred clock tick — set in ISR, consumed in loop() to keep ISR short
 // and avoid calling digitalWrite / MIDI send from interrupt context.
 volatile bool pendingClockTick = false;
+volatile bool usbControllerConnected = false;
 
 // ── Forward declarations ──────────────────────────────────────────────────────
 
@@ -137,17 +148,26 @@ void wrap_ls_midi_snd(SLMIDIPacket *pkt, uint8_t channel) {
     uint8_t ch      = (status & 0x0F) + 1;   // USBHost_t36 uses 1-based channels
 
     switch (msgType) {
-        case 0x90: midi1.sendNoteOn(d1, d2, ch);          break;
-        case 0x80: midi1.sendNoteOff(d1, d2, ch);         break;
-        case 0xB0: midi1.sendControlChange(d1, d2, ch);   break;
-        default:   break;
+        case 0x90:
+          midi1.sendNoteOn(d1, d2, ch);
+          break;
+        case 0x80:
+          midi1.sendNoteOff(d1, d2, ch);
+          break;
+        case 0xB0:
+          midi1.sendControlChange(d1, d2, ch);
+          break;
+        default:
+          break;
     }
 }
 
 // ── MIDI receive dispatch ─────────────────────────────────────────────────────
 
 void wrap_ls_midi_rcv(SLMIDIPacket *packet) {
-    if (packet == NULL || packet->length < 3) return;
+    printf("test");
+    if (packet == NULL || packet->length < 3) 
+      return;
     if (!processFunButton(packet) && !processColButton(packet))
         processGridButton(packet);
 #if DEBUG
@@ -289,11 +309,12 @@ void updateOutput(size_t outputIndex, uint8_t value) {
 
 void clockISR(void) {
     pendingClockTick = true;
+    //sequencer_clock(&sequencer);
 }
 
 void resetISR(void) {
     // Reset is safe to handle directly: only writes volatile fields
-    sequencer.clock_cpt = 0;
+    //sequencer.clock_cpt = 0;
     sequencer_stop(&sequencer);
     sequencer_play(&sequencer);
 }
@@ -309,7 +330,7 @@ void dirISR(void) {
 
 void setup() {
 #if DEBUG
-    Serial.begin(115200);
+    Serial.begin(9600);
 #endif
 
     // Gate output pins
@@ -360,14 +381,32 @@ void setup() {
     delay(500);
     myusb.Task();
     ls_updateDisplay(&ls);
+
+    usbControllerConnected = midi1.product() != NULL;
+    printf("%d", midi1.product() != NULL);
 }
 
 void loop() {
     myusb.Task();   // Pumps USB host: dispatches MIDI callbacks
+    midi1.read();
 
     if (pendingClockTick) {
         pendingClockTick = false;
+        //Serial.printf("%d\n",sequencer_getCurrentSequenceIndex(&sequencer));
         sequencer_clock(&sequencer);
+    }
+    
+
+    // refresh launchpad (after a while or if usb has been reconnected)
+    // compare state
+    if ((midi1.product() != NULL) != usbControllerConnected) {
+        // Cable connected and VBUS is powered
+        // if read says it's connected, update ls
+        if (!usbControllerConnected) {
+            ls_updateDisplay(&ls);
+        }
+
+        usbControllerConnected = midi1.product() != NULL;
     }
 }
 

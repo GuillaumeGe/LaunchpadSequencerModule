@@ -36,18 +36,18 @@ typedef enum LaunchpadVersion {
 } LaunchpadVersion;
 
 typedef struct launchpad_t {
-	uint8_t 					page_index;
-	uint8_t						trigger_index;
-	bool						shift_btn_hold;
-	bool						clear_btn_hold;
-	step_sequencer_t *			sequencer;
-	LaunchpadViewMode           current_view_mode;
+	uint8_t 									page_index;
+	uint8_t										trigger_index;
+	bool											shift_btn_hold;
+	bool											clear_btn_hold;
+	step_sequencer_t *				sequencer;
+	LaunchpadViewMode         current_view_mode;
 	LaunchpadSequenceViewMode	sequence_view_mode;
-	uint8_t						current_sequence_index;
-	bool						auto_follow_sequence;
+	uint8_t										current_sequence_index;
+	bool											auto_follow_sequence;
 	
-	void 						(*midi_snd_cb)(SLMIDIPacket * pkt, uint8_t channel);
-	void 						(*midi_rcv_cb)(SLMIDIPacket * pkt);
+	void 											(*midi_snd_cb)(SLMIDIPacket * pkt, uint8_t channel);
+	void 											(*midi_rcv_cb)(SLMIDIPacket * pkt);
 } launchpad_t;
 
 void 						ls_init(launchpad_t * l, step_sequencer_t * seq);

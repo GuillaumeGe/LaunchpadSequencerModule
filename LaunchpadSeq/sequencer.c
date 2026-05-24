@@ -61,72 +61,15 @@ void _sequencer_sequence_pattern_update_callback(void * sequence, uint8_t patter
 	}
 }
 
-//-----------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------
-
-void sequencer_init(step_sequencer_t * s) {
-	s->current_sequence_index = 0;
-	s->clock_cpt = 0;
-	s->clock_divider = 1;
-	s->current_state = kSequencerState_Stopped;
-	s->current_direction = kDirection_Forward;
-
-	sequencer_setNextSequenceIndex(s, NO_NEXT_SEQUENCE);
-	
-	memset((void *) s->triggers, 0x00, sizeof(s->triggers));
-	memset((void *) s->muted_triggers, false, sizeof(s->muted_triggers));
-	
-	for (size_t i = 0; i < N_SEQUENCES; i++) {
-		seq_init(&s->sequences[i]);
-		//TODO: load preset for seq 0
-		s->sequences[i].sequencer_ref = s;
-		s->sequences[i].step_updated_cb = _sequencer_sequence_step_update_callback;
-		s->sequences[i].pattern_updated_cb = _sequencer_sequence_pattern_update_callback;		
-	}
+uint8_t _getStep(step_sequencer_t * s) {
+	return s->clock_cpt / s->clock_divider;
 }
 
-void sequencer_incrCurrentStepIndexes(step_sequencer_t * s, int value) {
-	
-}
-
-int sequencer_setSequenceIndex(step_sequencer_t * s, uint8_t sequenceIndex) {
-	if (sequenceIndex > N_SEQUENCES) {
-		return -1;
-	}
-	
-	if (s->current_sequence_index == sequenceIndex) {
-		return 0;
-	}
-	
-	s->current_sequence_index = sequenceIndex;
-	
-	if (s->sequence_index_updated_cb != NULL) {
-		s->sequence_index_updated_cb(s, sequenceIndex);
-	}
-	
-	return 1;
-}
-
-void sequencer_clock(step_sequencer_t * s) {
-	//TODO: we will probably miss the first step
-	s->clock_cpt++;
-	
-	// Block further instructions
-	if (s->clock_cpt % (DEFAULT_CLOCK_DIVIDER * s->clock_divider) != 0) {
-		return;
-	}
-	
-	if (s->current_state != kSequencerState_Playing) {
-		return;
-	}
-	
-	uint8_t stepCpt = s->clock_cpt / (DEFAULT_CLOCK_DIVIDER);
-	step_sequence_t * sq = sequencer_getCurrentSequence(s);
+void _handleNextSequence(step_sequencer_t * s) {
 	int dir = s->current_direction == kDirection_Forward ? 1 : -1;
+	uint8_t stepCpt = _getStep(s);
+	step_sequence_t * sq = sequencer_getCurrentSequence(s);
 
-	printf("seq: %d; step: %d\n", s->current_sequence_index ,stepCpt);
-
-	//auto play next seq
 	if (s->next_sequence_index != NO_NEXT_SEQUENCE && s->next_sequence_index < N_SEQUENCES) {
 		bool goToNextSequence = false;
 				
@@ -149,15 +92,12 @@ void sequencer_clock(step_sequencer_t * s) {
 			}
 		}
 	}
-	
-	sq = sequencer_getCurrentSequence(s);
-	
-	// update sequence's patterns indexes
-	// incr/retain/decr cur sequence index
-	// value can be positive or negative
-	seq_incrCurrentStepIndexes(sq, dir);
-		
-	for (size_t i = 0; i < N_TRIGGERS; i++) {
+}
+
+void _updateTriggers(step_sequencer_t * s) {
+  step_sequence_t * sq = sequencer_getCurrentSequence(s);
+
+  for (size_t i = 0; i < N_TRIGGERS; i++) {
 		const bool muted = s->muted_triggers[i];
 		const size_t resolvedNextIndex = utils_circularLoopGetIndex(sq->current_step_indexes[i], 0, sq->last_step_indexes[i]);
 		const uint8_t value = sq->patterns[i].steps[resolvedNextIndex];
@@ -176,17 +116,94 @@ void sequencer_clock(step_sequencer_t * s) {
 			sequencer_setTriggerValue(s, i, value);
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
+
+void sequencer_init(step_sequencer_t * s) {
+	s->current_sequence_index = 0;
+	s->clock_cpt = 0;
+	s->clock_divider = DEFAULT_CLOCK_DIVIDER;
+	s->current_state = kSequencerState_Stopped;
+	s->current_direction = kDirection_Forward;
+
+	sequencer_setNextSequenceIndex(s, NO_NEXT_SEQUENCE);
 	
+	memset((void *) s->triggers, 0x00, sizeof(s->triggers));
+	memset((void *) s->muted_triggers, false, sizeof(s->muted_triggers));
+	
+	for (size_t i = 0; i < N_SEQUENCES; i++) {
+		seq_init(&s->sequences[i]);
+		//TODO: load preset for seq 0
+		s->sequences[i].sequencer_ref = s;
+		s->sequences[i].step_updated_cb = _sequencer_sequence_step_update_callback;
+		s->sequences[i].pattern_updated_cb = _sequencer_sequence_pattern_update_callback;		
+	}
+}
+
+int sequencer_setSequenceIndex(step_sequencer_t * s, uint8_t sequenceIndex) {
+	if (sequenceIndex > N_SEQUENCES) {
+		return -1;
+	}
+	
+	if (s->current_sequence_index == sequenceIndex) {
+		return 0;
+	}
+	
+	s->current_sequence_index = sequenceIndex;
+	
+	if (s->sequence_index_updated_cb != NULL) {
+		s->sequence_index_updated_cb(s, sequenceIndex);
+	}
+	
+	return 1;
+}
+
+void sequencer_clock(step_sequencer_t * s) {
+	if (s->current_state != kSequencerState_Playing) {
+		return;
+	}
+
+	//TODO: we will probably miss the first step
+	s->clock_cpt++;
+	
+	// Block further instructions
+	if (s->clock_cpt % (s->clock_divider) != 0) {
+		return;
+	}
+	
+	uint8_t stepCpt = _getStep(s);
+	step_sequence_t * sq = sequencer_getCurrentSequence(s);
+	int dir = s->current_direction == kDirection_Forward ? 1 : -1;
+
 	//TODO: reset to 0 after DEFAULT_CLOCK_DIVIDER * MAX_STTEPS because 3 is odd number uint8_t will not be enough
 	if (stepCpt > sq->length - 1) {
 		s->clock_cpt = 0;
+		stepCpt = 0;
 	}
+
+	printf("seq: %d; step: %d\n", s->current_sequence_index , stepCpt);
+
+	//auto play next seq
+	_handleNextSequence(s);
+	
+	sq = sequencer_getCurrentSequence(s);
+	
+	// update sequence's patterns indexes
+	// incr/retain/decr cur sequence index
+	// value can be positive or negative
+	seq_incrCurrentStepIndexes(sq, dir);
+		
+	_updateTriggers(s);
 	
 	//TODO: check if really needed
 	if (s->triggers_updated_cb != NULL) {
 		s->triggers_updated_cb(s);
 	}
 }
+
+
 
 int sequencer_setNextSequenceIndex(step_sequencer_t * s, int8_t sequenceIndex) {
 	if (sequenceIndex > N_SEQUENCES) {
@@ -220,6 +237,7 @@ void sequencer_stop(step_sequencer_t * s) {
 void sequencer_play(step_sequencer_t * s) {
 	if (s->current_state != kSequencerState_Playing) {
 		s->current_state = kSequencerState_Playing;
+    _updateTriggers(s);
 		if (s->state_updated_cb != NULL) {
 			s->state_updated_cb(s);
 		}

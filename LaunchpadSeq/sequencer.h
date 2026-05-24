@@ -16,8 +16,8 @@
 #define N_SEQUENCES                 16
 //TODO: remove from here
 #define N_TRIGGERS                  8
-#define NO_NEXT_SEQUENCE			-1
-#define DEFAULT_CLOCK_DIVIDER		3
+#define NO_NEXT_SEQUENCE						-1
+#define DEFAULT_CLOCK_DIVIDER				2
 
 typedef enum SequencerState {
 	kSequencerState_Stopped,
@@ -36,15 +36,15 @@ typedef enum Direction {
 */
 
 typedef struct step_sequencer_t {
-	step_sequence_t				sequences[N_SEQUENCES];
+	step_sequence_t							sequences[N_SEQUENCES];
 	volatile uint8_t            clock_cpt;
 	volatile uint8_t            clock_divider;
 	SequencerState              current_state;
-	Direction		            current_direction;
-	uint8_t						current_sequence_index;
-	int8_t						next_sequence_index;
+	Direction		            		current_direction;
+	uint8_t											current_sequence_index;
+	int8_t											next_sequence_index;
 	
-	uint8_t						triggers[N_TRIGGERS];
+	uint8_t											triggers[N_TRIGGERS];
 	bool                        muted_triggers[N_TRIGGERS];
 
 	void 						(*step_updated_cb)(void * seq, uint8_t sequence_index, uint8_t patternIndex, uint8_t stepIndex);
