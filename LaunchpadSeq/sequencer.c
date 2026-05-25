@@ -143,6 +143,12 @@ void sequencer_init(step_sequencer_t * s) {
 	}
 }
 
+void sequencer_clearAll(step_sequencer_t *s) {
+	for (size_t i = 0; i < N_SEQUENCES; i++) {
+		sequencer_clearAllPatterns(s, i);
+	}
+}
+
 int sequencer_setSequenceIndex(step_sequencer_t * s, uint8_t sequenceIndex) {
 	if (sequenceIndex > N_SEQUENCES) {
 		return -1;
@@ -220,6 +226,14 @@ uint8_t sequencer_getClockDivider(step_sequencer_t * s) {
 	return s->clock_divider;
 }
 
+SequencerState sequencer_getState(step_sequencer_t * s) {
+	return s->current_state;
+}
+
+Direction sequencer_getDirection(step_sequencer_t *s)
+{
+    return s->current_direction;
+}
 
 int sequencer_setNextSequenceIndex(step_sequencer_t * s, int8_t sequenceIndex) {
 	if (sequenceIndex > N_SEQUENCES) {

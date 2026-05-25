@@ -48,7 +48,7 @@ void 			seq_resetCurrentStepIndexes(step_sequence_t * s);
 int				seq_setLastStepIndex(step_sequence_t *s, uint8_t patternIndex, uint8_t index);
 int 			seq_linkPatternSteps(step_sequence_t * s, uint8_t patternIndex,  bool value);
 bool 			seq_isEmpty(step_sequence_t * s);
-uint8_t 	seq_length(step_sequence_t * s);
+uint8_t 		seq_length(step_sequence_t * s);
 void 			seq_incrCurrentStepIndexes(step_sequence_t * s, int value);
 
 #endif /* sequence_h */

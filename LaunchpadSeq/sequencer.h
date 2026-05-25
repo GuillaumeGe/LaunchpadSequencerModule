@@ -36,15 +36,15 @@ typedef enum Direction {
 */
 
 typedef struct step_sequencer_t {
-	step_sequence_t							sequences[N_SEQUENCES];
+	step_sequence_t				sequences[N_SEQUENCES];
 	volatile uint8_t            clock_cpt;
 	volatile uint8_t            clock_divider;
 	SequencerState              current_state;
-	Direction		            		current_direction;
-	uint8_t											current_sequence_index;
-	int8_t											next_sequence_index;
+	Direction		            current_direction;
+	uint8_t						current_sequence_index;
+	int8_t						next_sequence_index;
 	
-	uint8_t											triggers[N_TRIGGERS];
+	uint8_t						triggers[N_TRIGGERS];
 	bool                        muted_triggers[N_TRIGGERS];
 
 	void 						(*step_updated_cb)(void * seq, uint8_t sequence_index, uint8_t patternIndex, uint8_t stepIndex);
@@ -68,6 +68,9 @@ void 				sequencer_pause(step_sequencer_t * s);
 uint8_t				sequencer_getClockDivider(step_sequencer_t * s);
 uint8_t				sequencer_getCurrentSequenceIndex(step_sequencer_t * s);
 step_sequence_t *	sequencer_getCurrentSequence(step_sequencer_t *s);
+SequencerState 		sequencer_getState(step_sequencer_t * s);
+Direction 			sequencer_getDirection(step_sequencer_t * s);
+
 int 				sequencer_setSequenceIndex(step_sequencer_t * s, uint8_t sequenceIndex);
 int					sequencer_setMutedPattern(step_sequencer_t * s, uint8_t patternIndex, bool value);
 int 				sequencer_setNextSequenceIndex(step_sequencer_t * s, int8_t sequenceIndex);

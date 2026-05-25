@@ -14,6 +14,7 @@
 //
 //  Clock source: define USE_EXTERNAL_CLOCK 1 to drive the sequencer from
 //  CLOCK_IN_PIN instead of the internal IntervalTimer.
+#define ARDUINO 1
 
 #ifdef ARDUINO
 
@@ -45,6 +46,9 @@ extern "C" {
 #define CLOCK_OUT_PIN        3
 #define RESET_PIN            4
 #define DIR_PIN              5
+#define ENCODER_CLK_PIN      6
+#define ENCODER_DT_PIN       7
+#define ENCODER_SW_PIN       8
 
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 32  // OLED display height, in pixels
@@ -91,6 +95,11 @@ volatile bool usbControllerConnected = false;
 volatile size_t selectionIndex = 0;   // for fun buttons and pattern/sequence selection
 volatile MenuState menuState = kMenuState_Main;
 
+#define MENU_ITEM_COUNT 4
+volatile uint8_t menuItemIndex  = 0;
+volatile int8_t  encoderDir     = 0;   // +1 CW, -1 CCW, consumed in loop()
+volatile bool    pendingEncoderBtn = false;
+
 
 
 // ── Forward declarations ──────────────────────────────────────────────────────
@@ -109,6 +118,7 @@ bool processFunButton(SLMIDIPacket *packet);
 bool processColButton(SLMIDIPacket *packet);
 bool processGridButton(SLMIDIPacket *packet);
 void updateOutput(size_t outputIndex, uint8_t value);
+void updateOLEDDisplay(void);
 step_sequence_t *getCurrentSequenceLS(void);
 
 // ── Sequencer → UI callbacks ─────────────────────────────────────────────────
@@ -327,18 +337,66 @@ void updateOutput(size_t outputIndex, uint8_t value) {
         digitalWrite(outputs[outputIndex], value > 0 ? HIGH : LOW);
 }
 
+// ── Menu ──────────────────────────────────────────────────────────────────────
+
+typedef void (*MenuAction)(void);
+typedef struct { MenuAction action; } MenuItem;
+
+void loadPreset(uint8_t presetIndex) {
+    const ls_preset_t *p = &ls_presets[presetIndex];
+    step_sequence_t   *sq = sequencer_getCurrentSequence(&sequencer);
+    seq_clearAllPatterns(sq);
+    for (uint8_t t = 0; t < N_TRIGGERS; t++) {
+        for (uint8_t s = 0; s < DEFAULT_STEPS; s++)
+            seq_setPatternStepValue(sq, t, s, p->patterns[t][s]);
+        seq_setLastStepIndex(sq, t, p->last_steps[t] - 1);
+    }
+    ls_updateDisplay(&ls);
+}
+
+void menuAction_playPause(void) {
+    if (sequencer_getState(&sequencer) == kSequencerState_Playing)
+        sequencer_pause(&sequencer);
+    else
+        sequencer_play(&sequencer);
+    updateOLEDDisplay();
+}
+
+void menuAction_stop(void) {
+    sequencer_stop(&sequencer);
+    updateOLEDDisplay();
+}
+
+void menuAction_toggleDirection(void) {
+    sequencer.current_direction =
+        (sequencer.current_direction == kDirection_Forward)
+        ? kDirection_Backward
+        : kDirection_Forward;
+    updateOLEDDisplay();
+}
+
+void menuAction_openPresets(void) {
+    selectionIndex = 0;
+    menuState = kMenuState_PresetSelection;
+    updateOLEDDisplay();
+}
+
+static const MenuItem menuItems[MENU_ITEM_COUNT] = {
+    { menuAction_playPause      },
+    { menuAction_stop           },
+    { menuAction_toggleDirection },
+    { menuAction_openPresets    },
+};
+
 // ── Interrupt service routines ────────────────────────────────────────────────
 // Only set the flag here; the sequencer runs in loop() to avoid calling
 // digitalWrite / MIDI send from interrupt context.
 
 void clockISR(void) {
     pendingClockTick = true;
-    //sequencer_clock(&sequencer);
 }
 
 void resetISR(void) {
-    // Reset is safe to handle directly: only writes volatile fields
-    //sequencer.clock_cpt = 0;
     sequencer_stop(&sequencer);
     sequencer_play(&sequencer);
 }
@@ -348,6 +406,20 @@ void dirISR(void) {
         (sequencer.current_direction == kDirection_Forward)
         ? kDirection_Backward
         : kDirection_Forward;
+}
+
+void encoderISR(void) {
+    static uint8_t prevCLK = HIGH;
+    uint8_t clk = digitalRead(ENCODER_CLK_PIN);
+    if (clk != prevCLK) {
+        prevCLK = clk;
+        if (clk == LOW)
+            encoderDir = (digitalRead(ENCODER_DT_PIN) == HIGH) ? 1 : -1;
+    }
+}
+
+void encoderBtnISR(void) {
+    pendingEncoderBtn = true;
 }
 
 // ── DISPLAY  ────────────────────────────────────────────────
@@ -417,22 +489,22 @@ void drawMainMenu() {
     */
   // e.g. top-right corner of the 128x32 display
 
-    drawIcon(0, 8, sequencer_getState(&sequencer) == kSequencerState_Playing ? ICON_PAUSE : ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, true);
-    drawIcon(32, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, true);
-    drawIcon(64, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, true);
-    drawIcon(96, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, true);
+    drawIcon(0,  8, sequencer_getState(&sequencer) == kSequencerState_Playing ? ICON_PAUSE : ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 0);
+    drawIcon(32, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 1);
+    drawIcon(64, 8, sequencer_getDirection(&sequencer) == kDirection_Forward ? ICON_ARROW_RIGHT : ICON_ARROW_LEFT, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 2);
+    drawIcon(96, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 3);
 
     display.display();
 }
 
 void updateOLEDDisplay() {
     switch (menuState) {
-        case MenuState_Main:
+        case kMenuState_Main:
             drawMainMenu();
             break;
-        case MenuState_PresetSelection:
+        case kMenuState_PresetSelection:
             drawPresetsMenu();
-            break;  
+            break;
         default:
             break;
     }
@@ -459,6 +531,12 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(RESET_PIN), resetISR, RISING);
     attachInterrupt(digitalPinToInterrupt(DIR_PIN),   dirISR,   CHANGE);
 
+    pinMode(ENCODER_CLK_PIN, INPUT_PULLUP);
+    pinMode(ENCODER_DT_PIN,  INPUT_PULLUP);
+    pinMode(ENCODER_SW_PIN,  INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(ENCODER_CLK_PIN), encoderISR,    CHANGE);
+    attachInterrupt(digitalPinToInterrupt(ENCODER_SW_PIN),  encoderBtnISR, FALLING);
+
 #if USE_EXTERNAL_CLOCK
     attachInterrupt(digitalPinToInterrupt(CLOCK_IN_PIN), clockISR, RISING);
 #else
@@ -472,24 +550,18 @@ void setup() {
     midi1.setHandleControlChange(onControlChange);
 
     // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-    if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-        Serial.println(F("SSD1306 allocation failed"));
-        for (;;)
-        ;  // Don't proceed, loop forever
+    if (display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+        display.setTextSize(FONT_SIZE);
+        display.setRotation(2);
+        // Show initial display buffer contents on the screen --
+        // the library initializes this with an Adafruit splash screen.
+        display.display();
+        display.clearDisplay(); // Clear the buffer
+
+        drawMainMenu();
+    } else {
+        Serial.println(F("SSD1306 initialization failed"));
     }
-
-    display.setTextSize(FONT_SIZE);
-    display.setRotation(2);
-    // Show initial display buffer contents on the screen --
-    // the library initializes this with an Adafruit splash screen.
-    display.display();
-    display.clearDisplay(); // Clear the buffer
-    display.drawPixel(10, 10, SSD1306_WHITE); // Draw a single pixel in white
-    // Show the display buffer on the screen. You MUST call display() after
-    // drawing commands to make them visible on screen!
-    display.display();
-
-    drawMainMenu();
 
     // Sequencer init
     sequencer_init(&sequencer);
@@ -523,8 +595,34 @@ void loop() {
 
     if (pendingClockTick) {
         pendingClockTick = false;
-        //Serial.printf("%d\n",sequencer_getCurrentSequenceIndex(&sequencer));
         sequencer_clock(&sequencer);
+    }
+
+    if (encoderDir != 0) {
+        int8_t dir = encoderDir;
+        encoderDir = 0;
+        if (menuState == kMenuState_Main) {
+            menuItemIndex = (menuItemIndex + MENU_ITEM_COUNT + dir) % MENU_ITEM_COUNT;
+        } else if (menuState == kMenuState_PresetSelection) {
+            selectionIndex = (selectionIndex + LS_PRESETS_COUNT + dir) % LS_PRESETS_COUNT;
+        }
+        updateOLEDDisplay();
+    }
+
+    if (pendingEncoderBtn) {
+        pendingEncoderBtn = false;
+        static unsigned long lastBtnTime = 0;
+        unsigned long now = millis();
+        if (now - lastBtnTime > 200) {
+            lastBtnTime = now;
+            if (menuState == kMenuState_Main) {
+                menuItems[menuItemIndex].action();
+            } else if (menuState == kMenuState_PresetSelection) {
+                loadPreset(selectionIndex);
+                menuState = kMenuState_Main;
+                updateOLEDDisplay();
+            }
+        }
     }
     
 

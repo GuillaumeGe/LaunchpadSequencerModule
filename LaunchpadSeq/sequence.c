@@ -189,3 +189,7 @@ int seq_linkPatternSteps(step_sequence_t * s, uint8_t patternIndex, bool value) 
 bool seq_isEmpty(step_sequence_t * s) {
 	return s->empty_cpt > 0;
 }
+
+uint8_t seq_length(step_sequence_t *s) {
+    return s->length;
+}
