@@ -11,6 +11,7 @@
 
 #define ICON_WIDTH  16
 #define ICON_HEIGHT 16
+#define ICON_PADDING 4
 
 // Usage: display.drawBitmap(x, y, ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
 

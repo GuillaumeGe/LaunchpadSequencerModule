@@ -371,18 +371,29 @@ void _printPRESET(uint8_t size) {
   display.print(F("Custom"));
 }
 
+void drawIcon(int16_t x, int16_t y, const uint8_t bitmap[], int16_t w, int16_t h, bool selected) {
+    const uint8_t offset = (ICON_PADDING/2);
+    if (selected) {
+        display.drawRect(offset + x - (ICON_PADDING/2), y - (ICON_PADDING/2), w + ICON_PADDING, h + ICON_PADDING, SSD1306_WHITE);
+    }
+    display.drawBitmap(offset + x, y, bitmap,  ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
+}
+
 void drawMainScreen() {
   display.clearDisplay();
+  display.setCursor((ICON_PADDING/2), 0);
   
+  /*
   _printCLK(sequencer_getClockDivider(&sequencer));
   _printDIR(0);
   display.println(F("")); // Break line
   _printPRESET(1);
-
+    */
   // e.g. top-right corner of the 128x32 display
-//display.drawBitmap(112, 8, ICON_PLAY,  ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
-//display.drawBitmap(112, 8, ICON_PAUSE, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
-//display.drawBitmap(112, 8, ICON_STOP,  ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
+    drawIcon(0, 8, ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, true);
+    drawIcon(32, 8, ICON_PAUSE, ICON_WIDTH, ICON_HEIGHT, true);
+    drawIcon(64, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, true);
+
 
   display.display();
 }
