@@ -393,6 +393,7 @@ void drawMainScreen() {
     drawIcon(0, 8, ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, true);
     drawIcon(32, 8, ICON_PAUSE, ICON_WIDTH, ICON_HEIGHT, true);
     drawIcon(64, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, true);
+    drawIcon(96, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, true);
 
 
   display.display();
