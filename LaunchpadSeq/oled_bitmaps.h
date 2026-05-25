@@ -1,0 +1,123 @@
+#pragma once
+
+#ifdef ARDUINO
+  #include <Arduino.h>
+#else
+  #ifndef PROGMEM
+    #define PROGMEM
+  #endif
+  #include <stdint.h>
+#endif
+
+#define ICON_WIDTH  16
+#define ICON_HEIGHT 16
+
+// Usage: display.drawBitmap(x, y, ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
+
+// Play — right-pointing filled triangle (1px padding, tip at col 13 rows 7-8)
+// ................
+// .X..............
+// .XXX............
+// .XXXXX..........
+// .XXXXXXX........
+// .XXXXXXXXX......
+// .XXXXXXXXXXX....
+// .XXXXXXXXXXXXX..
+// .XXXXXXXXXXXXX..
+// .XXXXXXXXXXX....
+// .XXXXXXXXX......
+// .XXXXXXX........
+// .XXXXX..........
+// .XXX............
+// .X..............
+// ................
+const uint8_t ICON_PLAY[] PROGMEM = {
+    0x00, 0x00,
+    0x40, 0x00,
+    0x70, 0x00,
+    0x7C, 0x00,
+    0x7F, 0x00,
+    0x7F, 0xC0,
+    0x7F, 0xF0,
+    0x7F, 0xFC,
+    0x7F, 0xFC,
+    0x7F, 0xF0,
+    0x7F, 0xC0,
+    0x7F, 0x00,
+    0x7C, 0x00,
+    0x70, 0x00,
+    0x40, 0x00,
+    0x00, 0x00
+};
+
+// Pause — two 4px-wide vertical bars (cols 2-5 and cols 10-13, rows 2-13)
+// ................
+// ................
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ..XXXX....XXXX..
+// ................
+// ................
+const uint8_t ICON_PAUSE[] PROGMEM = {
+    0x00, 0x00,
+    0x00, 0x00,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x00, 0x00,
+    0x00, 0x00
+};
+
+// Stop — filled 12x12 square centered in 16x16 (cols 2-13, rows 2-13)
+// ................
+// ................
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ..XXXXXXXXXXXX..
+// ................
+// ................
+const uint8_t ICON_STOP[] PROGMEM = {
+    0x00, 0x00,
+    0x00, 0x00,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x3F, 0xFC,
+    0x00, 0x00,
+    0x00, 0x00
+};

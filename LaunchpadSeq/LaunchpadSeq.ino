@@ -29,6 +29,8 @@ extern "C" {
 #include "sequencer.h"
 #include "sequence.h"
 #include "utils.h"
+#include "oled_bitmaps.h"
+
 }
 
 // ── Configuration ────────────────────────────────────────────────────────────
@@ -376,6 +378,11 @@ void drawMainScreen() {
   _printDIR(0);
   display.println(F("")); // Break line
   _printPRESET(1);
+
+  // e.g. top-right corner of the 128x32 display
+//display.drawBitmap(112, 8, ICON_PLAY,  ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
+//display.drawBitmap(112, 8, ICON_PAUSE, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
+//display.drawBitmap(112, 8, ICON_STOP,  ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
 
   display.display();
 }
