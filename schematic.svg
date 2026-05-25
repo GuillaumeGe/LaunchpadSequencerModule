@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 820" width="1120" height="820">
+<style>
+  text { font-family: 'Courier New', Courier, monospace; }
+  .ttl  { font-size:14px; font-weight:bold; fill:#111; }
+  .cmp  { font-size:11px; font-weight:bold; }
+  .pin  { font-size:9.5px; fill:#222; }
+  .val  { font-size:9px;   fill:#555; font-style:italic; }
+  .note { font-size:8.5px; fill:#888; font-style:italic; }
+  .net  { font-size:8.5px; fill:#666; }
+</style>
+
+<!-- ─── background ──────────────────────────────────────────── -->
+<rect width="1120" height="820" fill="#fdfdfd"/>
+<rect x="1" y="1" width="1118" height="818" fill="none" stroke="#bbb" stroke-width="1.5" rx="3"/>
+
+<!-- ─── title ──────────────────────────────────────────────── -->
+<text x="14" y="22" class="ttl">Launchpad Sequencer – Eurorack Electrical Schematic  (Teensy 4.1 · SSD1306 OLED I²C · Rotary Encoder · USB Host)</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     EURORACK 16-PIN IDC POWER HEADER
+     ════════════════════════════════════════════════════════════ -->
+<rect x="12" y="48" width="132" height="240" rx="3" fill="#fff8e1" stroke="#b8860b" stroke-width="1.5"/>
+<text x="18" y="62"  class="cmp" fill="#7a5700">16-pin IDC</text>
+<text x="18" y="73"  class="val">Eurorack bus header</text>
+<!-- pin rows -->
+<text x="18"  y="92"  class="pin" fill="#880000">● 1  −12V</text>
+<text x="80"  y="92"  class="pin" fill="#880000">● 2  −12V</text>
+<text x="18"  y="107" class="pin" fill="#333">● 3   GND</text>
+<text x="80"  y="107" class="pin" fill="#333">● 4   GND</text>
+<text x="18"  y="122" class="pin" fill="#333">● 5   GND</text>
+<text x="80"  y="122" class="pin" fill="#333">● 6   GND</text>
+<text x="18"  y="137" class="pin" fill="#333">● 7   GND</text>
+<text x="80"  y="137" class="pin" fill="#333">● 8   GND</text>
+<text x="18"  y="152" class="pin" fill="#333">● 9   GND</text>
+<text x="80"  y="152" class="pin" fill="#333">●10   GND</text>
+<text x="18"  y="167" class="pin" fill="#cc0000">●11  +12V</text>
+<text x="80"  y="167" class="pin" fill="#cc0000">●12  +12V</text>
+<text x="18"  y="182" class="pin" fill="#dd6600">●13   +5V</text>
+<text x="80"  y="182" class="pin" fill="#dd6600">●14   +5V</text>
+<text x="18"  y="197" class="pin" fill="#333">●15   GND</text>
+<text x="80"  y="197" class="pin" fill="#333">●16   GND</text>
+<!-- keying mark -->
+<polygon points="12,270 20,280 12,280" fill="#b8860b"/>
+<text x="26" y="279" class="note">▲ pin 1 (key notch)</text>
+
+<!-- ─── protection diode D1 (1N4001) on +12V ──────────────── -->
+<!-- wire from pin 11 right edge of header to D1 -->
+<line x1="144" y1="163" x2="162" y2="163" stroke="#cc0000" stroke-width="2"/>
+<!-- diode symbol -->
+<polygon points="162,157 172,163 162,169" fill="#cc0000"/>
+<line x1="172" y1="157" x2="172" y2="169" stroke="#cc0000" stroke-width="1.8"/>
+<text x="157" y="153" class="val" fill="#cc0000">D1 1N4001</text>
+<line x1="172" y1="163" x2="185" y2="163" stroke="#cc0000" stroke-width="2"/>
+
+<!-- ════════════════════════════════════════════════════════════
+     DC-DC CONVERTER  R-78E5.0-0.5  (12V → 5V, 500mA)
+     ════════════════════════════════════════════════════════════ -->
+<rect x="12" y="300" width="155" height="68" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="20" y="315"  class="cmp" fill="#1b5e20">R-78E5.0-0.5</text>
+<text x="20" y="327"  class="val">12V → 5V · 500 mA</text>
+<text x="20" y="339"  class="val">switching (low heat)</text>
+<text x="20" y="352"  class="val">IN · GND · OUT</text>
+
+<!-- +12V wire header→DC-DC (right side, drops vertically) -->
+<line x1="185" y1="163" x2="185" y2="318" stroke="#cc0000" stroke-width="2"/>
+<line x1="167" y1="318" x2="185" y2="318" stroke="#cc0000" stroke-width="2"/>
+<text x="188" y="240" class="net" fill="#cc0000">+12V</text>
+
+<!-- input decoupling caps (C1/C2) shown as note beside DC-DC -->
+<text x="12" y="386" class="val">C1 100µF + C2 100nF  (input decoupling)</text>
+
+<!-- +5V output wire DC-DC → Teensy VIN -->
+<line x1="167" y1="334" x2="200" y2="334" stroke="#ee6600" stroke-width="2"/>
+<line x1="200" y1="334" x2="200" y2="95"  stroke="#ee6600" stroke-width="2"/>
+<line x1="200" y1="95"  x2="250" y2="95"  stroke="#ee6600" stroke-width="2"/>
+<text x="205" y="220" class="net" fill="#ee6600">+5V</text>
+<!-- output decoupling note -->
+<text x="12" y="398" class="val">C3 100µF + C4 100nF  (output decoupling)</text>
+<!-- −12V bypass note -->
+<text x="12" y="413" class="val">C5 100µF  (−12V bypass, not used)</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     INPUT JACKS:  CLK_IN · RESET · DIR
+     ════════════════════════════════════════════════════════════ -->
+<text x="12" y="442" class="cmp" fill="#7a2e00">CV / Gate Inputs</text>
+<text x="12" y="454" class="note">3.5 mm mono jacks  ·  0 to +5V Eurorack signals</text>
+<text x="12" y="465" class="note">Protection: 10 kΩ series  +  BAT48 Schottky clamp to 3.3V</text>
+
+<!-- CLK_IN jack -->
+<rect x="12" y="473" width="100" height="36" rx="3" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+<text x="18" y="487" class="pin">CLK IN</text>
+<text x="18" y="500" class="val">3.5mm · p2</text>
+
+<!-- RESET jack -->
+<rect x="12" y="518" width="100" height="36" rx="3" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+<text x="18" y="532" class="pin">RESET</text>
+<text x="18" y="545" class="val">3.5mm · p4</text>
+
+<!-- DIR jack -->
+<rect x="12" y="563" width="100" height="36" rx="3" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+<text x="18" y="577" class="pin">DIR</text>
+<text x="18" y="590" class="val">3.5mm · p5</text>
+
+<!-- CLK_OUT jack (output) -->
+<rect x="12" y="618" width="100" height="36" rx="3" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="18" y="632" class="pin">CLK OUT</text>
+<text x="18" y="645" class="val">3.5mm · p3</text>
+
+<!-- protection inline – CLK_IN (horizontal L-route) -->
+<!-- wire from jack right (112,491) → 10k box → BAT48 node → Teensy p2 (250,195) -->
+<line x1="112" y1="491" x2="130" y2="491" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="130" y="484" width="22" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="131" y="494" class="val">10k</text>
+<line x1="152" y1="491" x2="167" y2="491" stroke="#0000bb" stroke-width="1.4"/>
+<!-- Schottky clamp symbol (line + arrowhead down to GND) -->
+<line x1="160" y1="491" x2="160" y2="505" stroke="#0000bb" stroke-width="1"/>
+<polygon points="155,505 165,505 160,512" fill="#444"/>
+<text x="144" y="522" class="val">BAT48</text>
+<text x="141" y="531" class="val">→ 3.3V</text>
+<!-- route to Teensy -->
+<polyline points="167,491 210,491 210,195 250,195" stroke="#0000bb" stroke-width="1.4" fill="none"/>
+
+<!-- protection inline – RESET -->
+<line x1="112" y1="536" x2="130" y2="536" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="130" y="529" width="22" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="131" y="539" class="val">10k</text>
+<line x1="152" y1="536" x2="170" y2="536" stroke="#0000bb" stroke-width="1.4"/>
+<line x1="162" y1="536" x2="162" y2="550" stroke="#0000bb" stroke-width="1"/>
+<polygon points="157,550 167,550 162,557" fill="#444"/>
+<polyline points="170,536 215,536 215,228 250,228" stroke="#0000bb" stroke-width="1.4" fill="none"/>
+
+<!-- protection inline – DIR -->
+<line x1="112" y1="581" x2="130" y2="581" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="130" y="574" width="22" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="131" y="584" class="val">10k</text>
+<line x1="152" y1="581" x2="172" y2="581" stroke="#0000bb" stroke-width="1.4"/>
+<line x1="164" y1="581" x2="164" y2="595" stroke="#0000bb" stroke-width="1"/>
+<polygon points="159,595 169,595 164,602" fill="#444"/>
+<polyline points="172,581 218,581 218,247 250,247" stroke="#0000bb" stroke-width="1.4" fill="none"/>
+
+<!-- CLK_OUT wire from Teensy (p3, right side exits at 490,213) → to jack -->
+<polyline points="490,213 540,213 540,636 112,636" stroke="#0000bb" stroke-width="1.4" fill="none" stroke-dasharray="5,3"/>
+<!-- 100Ω on CLK_OUT -->
+<rect x="510" y="206" width="26" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="511" y="216" class="val">100Ω</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     TEENSY 4.1
+     ════════════════════════════════════════════════════════════ -->
+<rect x="250" y="45" width="240" height="690" rx="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+<text x="300" y="62"  class="cmp" fill="#1565c0">TEENSY 4.1</text>
+<text x="275" y="75"  class="val" fill="#444">600 MHz ARM Cortex-M7  ·  3.3V logic</text>
+
+<!-- ── left-side pins ── -->
+<!-- VIN -->
+<line x1="250" y1="95"  x2="230" y2="95"  stroke="#ee6600" stroke-width="2"/>
+<text x="254" y="99"  class="pin">VIN  ←  +5V  (3.6–5.5V)</text>
+<!-- GND -->
+<line x1="250" y1="113" x2="230" y2="113" stroke="#444"    stroke-width="1.5"/>
+<text x="254" y="117" class="pin">GND</text>
+<!-- 3.3V output -->
+<line x1="250" y1="131" x2="230" y2="131" stroke="#ddaa00" stroke-width="2"/>
+<text x="254" y="135" class="pin" fill="#7a6000">3.3V ──► (OLED, pullups)</text>
+
+<line x1="254" y1="145" x2="486" y2="145" stroke="#aaa" stroke-width="0.5" stroke-dasharray="3,4"/>
+
+<!-- p2 CLK_IN -->
+<line x1="250" y1="195" x2="230" y2="195" stroke="#0000bb" stroke-width="1.4"/>
+<text x="254" y="199" class="pin">p2   CLK_IN    ← RISING interrupt</text>
+<!-- p4 RESET -->
+<line x1="250" y1="228" x2="230" y2="228" stroke="#0000bb" stroke-width="1.4"/>
+<text x="254" y="232" class="pin">p4   RESET     ← RISING interrupt</text>
+<!-- p5 DIR -->
+<line x1="250" y1="247" x2="230" y2="247" stroke="#0000bb" stroke-width="1.4"/>
+<text x="254" y="251" class="pin">p5   DIR       ← CHANGE interrupt</text>
+
+<line x1="254" y1="262" x2="486" y2="262" stroke="#aaa" stroke-width="0.5" stroke-dasharray="3,4"/>
+
+<!-- p6 ENC_CLK -->
+<line x1="250" y1="277" x2="230" y2="277" stroke="#007700" stroke-width="1.4"/>
+<text x="254" y="281" class="pin" fill="#004400">p6   ENC_CLK  ← CHANGE  INPUT_PULLUP</text>
+<!-- p7 ENC_DT -->
+<line x1="250" y1="295" x2="230" y2="295" stroke="#007700" stroke-width="1.4"/>
+<text x="254" y="299" class="pin" fill="#004400">p7   ENC_DT   ←         INPUT_PULLUP</text>
+<!-- p8 ENC_SW -->
+<line x1="250" y1="313" x2="230" y2="313" stroke="#007700" stroke-width="1.4"/>
+<text x="254" y="317" class="pin" fill="#004400">p8   ENC_SW   ← FALLING INPUT_PULLUP</text>
+
+<line x1="254" y1="328" x2="486" y2="328" stroke="#aaa" stroke-width="0.5" stroke-dasharray="3,4"/>
+
+<!-- p18 SDA -->
+<line x1="250" y1="345" x2="230" y2="345" stroke="#7700cc" stroke-width="1.4"/>
+<text x="254" y="349" class="pin" fill="#5500aa">p18  SDA (I²C, Wire)  →  OLED</text>
+<!-- p19 SCL -->
+<line x1="250" y1="363" x2="230" y2="363" stroke="#7700cc" stroke-width="1.4"/>
+<text x="254" y="367" class="pin" fill="#5500aa">p19  SCL (I²C, Wire)  →  OLED</text>
+<text x="254" y="382" class="val">4.7 kΩ pullups to 3.3V on SDA + SCL</text>
+
+<line x1="254" y1="392" x2="486" y2="392" stroke="#aaa" stroke-width="0.5" stroke-dasharray="3,4"/>
+
+<!-- gate output internal label -->
+<text x="310" y="410" class="pin" fill="#444">Gate outputs  3.3V logic</text>
+<text x="310" y="423" class="val">100 Ω series on each line</text>
+
+<!-- p30-p37 right-side pins -->
+<line x1="490" y1="438" x2="510" y2="438" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="442" class="pin">p30   OUT 1  ──►</text>
+<line x1="490" y1="455" x2="510" y2="455" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="459" class="pin">p31   OUT 2  ──►</text>
+<line x1="490" y1="472" x2="510" y2="472" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="476" class="pin">p32   OUT 3  ──►</text>
+<line x1="490" y1="489" x2="510" y2="489" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="493" class="pin">p33   OUT 4  ──►</text>
+<line x1="490" y1="506" x2="510" y2="506" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="510" class="pin">p34   OUT 5  ──►</text>
+<line x1="490" y1="523" x2="510" y2="523" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="527" class="pin">p35   OUT 6  ──►</text>
+<line x1="490" y1="540" x2="510" y2="540" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="544" class="pin">p36   OUT 7  ──►</text>
+<line x1="490" y1="557" x2="510" y2="557" stroke="#0000bb" stroke-width="1.4"/>
+<text x="400" y="561" class="pin">p37   OUT 8  ──►</text>
+
+<!-- p3 CLK_OUT (right side) -->
+<line x1="490" y1="213" x2="510" y2="213" stroke="#0000bb" stroke-width="1.4" stroke-dasharray="4,2"/>
+<text x="400" y="207" class="pin">p3    CLK_OUT ──► (dashed = also left-routed)</text>
+
+<line x1="254" y1="572" x2="486" y2="572" stroke="#aaa" stroke-width="0.5" stroke-dasharray="3,4"/>
+
+<!-- USB host note -->
+<text x="272" y="598" class="pin" fill="#1565c0">USB HOST  (bottom pads)</text>
+<text x="272" y="613" class="val">D− · D+ · VBUS · GND · ID</text>
+<text x="272" y="627" class="val">VBUS ← +5V via F1 500mA polyfuse</text>
+<line x1="370" y1="638" x2="370" y2="655" stroke="#1565c0" stroke-width="1.5"/>
+<line x1="370" y1="655" x2="640" y2="655" stroke="#1565c0" stroke-width="1.5"/>
+<line x1="640" y1="655" x2="640" y2="686" stroke="#1565c0" stroke-width="1.5"/>
+
+<!-- ════════════════════════════════════════════════════════════
+     GATE OUTPUT JACKS  (8 × 3.5mm mono, pins 30-37)
+     ════════════════════════════════════════════════════════════ -->
+
+<!-- OUT1 -->
+<line x1="510" y1="438" x2="536" y2="438" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="431" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="441" class="val">100Ω</text>
+<line x1="560" y1="438" x2="600" y2="438" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="423" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="437" class="pin">OUT 1</text>
+<text x="608" y="448" class="val">3.5mm jack</text>
+
+<!-- OUT2 -->
+<line x1="510" y1="455" x2="536" y2="455" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="448" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="458" class="val">100Ω</text>
+<line x1="560" y1="455" x2="600" y2="455" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="440" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="454" class="pin">OUT 2</text>
+<text x="608" y="465" class="val">3.5mm jack</text>
+
+<!-- OUT3 -->
+<line x1="510" y1="472" x2="536" y2="472" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="465" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="475" class="val">100Ω</text>
+<line x1="560" y1="472" x2="600" y2="472" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="457" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="471" class="pin">OUT 3</text>
+<text x="608" y="482" class="val">3.5mm jack</text>
+
+<!-- OUT4 -->
+<line x1="510" y1="489" x2="536" y2="489" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="482" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="492" class="val">100Ω</text>
+<line x1="560" y1="489" x2="600" y2="489" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="474" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="488" class="pin">OUT 4</text>
+<text x="608" y="499" class="val">3.5mm jack</text>
+
+<!-- OUT5 -->
+<line x1="510" y1="506" x2="536" y2="506" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="499" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="509" class="val">100Ω</text>
+<line x1="560" y1="506" x2="600" y2="506" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="491" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="505" class="pin">OUT 5</text>
+<text x="608" y="516" class="val">3.5mm jack</text>
+
+<!-- OUT6 -->
+<line x1="510" y1="523" x2="536" y2="523" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="516" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="526" class="val">100Ω</text>
+<line x1="560" y1="523" x2="600" y2="523" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="508" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="522" class="pin">OUT 6</text>
+<text x="608" y="533" class="val">3.5mm jack</text>
+
+<!-- OUT7 -->
+<line x1="510" y1="540" x2="536" y2="540" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="533" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="543" class="val">100Ω</text>
+<line x1="560" y1="540" x2="600" y2="540" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="525" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="539" class="pin">OUT 7</text>
+<text x="608" y="550" class="val">3.5mm jack</text>
+
+<!-- OUT8 -->
+<line x1="510" y1="557" x2="536" y2="557" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="536" y="550" width="24" height="14" rx="2" fill="#fffde7" stroke="#999"/>
+<text x="538" y="560" class="val">100Ω</text>
+<line x1="560" y1="557" x2="600" y2="557" stroke="#0000bb" stroke-width="1.4"/>
+<rect x="600" y="542" width="100" height="30" rx="3" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+<text x="608" y="556" class="pin">OUT 8</text>
+<text x="608" y="567" class="val">3.5mm jack</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     OLED SSD1306  (128×32 · I²C · addr 0x3C)
+     ════════════════════════════════════════════════════════════ -->
+<rect x="600" y="596" width="160" height="65" rx="4" fill="#e8eaf6" stroke="#3949ab" stroke-width="1.5"/>
+<text x="614" y="612" class="cmp" fill="#3949ab">SSD1306 OLED</text>
+<text x="614" y="624" class="val">128×32 px · I²C · 0x3C</text>
+<text x="614" y="636" class="pin">VCC → 3.3V  ·  GND → GND</text>
+<text x="614" y="648" class="pin">SDA → p18  ·  SCL → p19</text>
+<text x="614" y="660" class="val">4.7kΩ pullups on SDA+SCL to 3.3V</text>
+
+<!-- I2C wires Teensy left → OLED (routes down-left side, then across bottom) -->
+<polyline points="230,345 225,345 225,670 600,670" stroke="#7700cc" stroke-width="1.4" fill="none"/>
+<polyline points="230,363 222,363 222,680 600,680" stroke="#7700cc" stroke-width="1.4" fill="none"/>
+<text x="226" y="340" class="net" fill="#7700cc">SDA</text>
+<text x="226" y="358" class="net" fill="#7700cc">SCL</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     ROTARY ENCODER  (with push-button)
+     ════════════════════════════════════════════════════════════ -->
+<rect x="600" y="676" width="160" height="78" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="614" y="692" class="cmp" fill="#2e7d32">Rotary Encoder</text>
+<text x="614" y="704" class="val">with push-button · COM → GND</text>
+<text x="614" y="716" class="pin">CLK(A) → p6</text>
+<text x="614" y="728" class="pin">DT (B) → p7</text>
+<text x="614" y="740" class="pin">SW     → p8</text>
+<text x="614" y="752" class="val">10kΩ pullup + 100nF cap on each line</text>
+
+<!-- Encoder wires Teensy left p6/p7/p8 → Encoder block -->
+<polyline points="230,277 220,277 220,735 600,735" stroke="#007700" stroke-width="1.4" fill="none"/>
+<polyline points="230,295 218,295 218,748 600,748" stroke="#007700" stroke-width="1.4" fill="none"/>
+<polyline points="230,313 216,313 216,760 600,760" stroke="#007700" stroke-width="1.4" fill="none"/>
+<text x="221" y="273" class="net" fill="#007700">A</text>
+<text x="221" y="291" class="net" fill="#007700">B</text>
+<text x="221" y="309" class="net" fill="#007700">SW</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     USB-A HOST JACK  (for Launchpad)
+     ════════════════════════════════════════════════════════════ -->
+<rect x="780" y="638" width="145" height="60" rx="4" fill="#fce4ec" stroke="#b71c1c" stroke-width="1.5"/>
+<text x="793" y="655" class="cmp" fill="#b71c1c">USB-A Female</text>
+<text x="793" y="667" class="val">Launchpad host port</text>
+<text x="793" y="679" class="pin">VBUS ← +5V via F1 (500mA)</text>
+<text x="793" y="691" class="pin">D−, D+ → Teensy host pads</text>
+
+<!-- USB wire from Teensy bottom-right (640,655) to USB-A -->
+<line x1="640" y1="655" x2="780" y2="655" stroke="#0044aa" stroke-width="1.8"/>
+
+<!-- ════════════════════════════════════════════════════════════
+     GND SYMBOLS  (common ground)
+     ════════════════════════════════════════════════════════════ -->
+<!-- GND at Teensy p13 -->
+<line  x1="240" y1="113" x2="240" y2="140"   stroke="#444" stroke-width="1.5"/>
+<line  x1="232" y1="140" x2="248" y2="140"   stroke="#444" stroke-width="1.5"/>
+<line  x1="235" y1="145" x2="245" y2="145"   stroke="#444" stroke-width="1.5"/>
+<line  x1="237" y1="150" x2="243" y2="150"   stroke="#444" stroke-width="1.5"/>
+
+<!-- GND at DC-DC -->
+<line  x1="90"  y1="368" x2="90"  y2="390"   stroke="#444" stroke-width="1.5"/>
+<line  x1="82"  y1="390" x2="98"  y2="390"   stroke="#444" stroke-width="1.5"/>
+<line  x1="85"  y1="395" x2="95"  y2="395"   stroke="#444" stroke-width="1.5"/>
+<line  x1="88"  y1="400" x2="92"  y2="400"   stroke="#444" stroke-width="1.5"/>
+<text  x="72"   y="410"  class="val" fill="#333">GND</text>
+
+<!-- GND at header -->
+<line  x1="78"  y1="288" x2="78"  y2="308"   stroke="#444" stroke-width="1.5"/>
+<line  x1="70"  y1="308" x2="86"  y2="308"   stroke="#444" stroke-width="1.5"/>
+<line  x1="73"  y1="313" x2="83"  y2="313"   stroke="#444" stroke-width="1.5"/>
+<line  x1="76"  y1="318" x2="80"  y2="318"   stroke="#444" stroke-width="1.5"/>
+<text  x="60"   y="328"  class="val" fill="#333">GND</text>
+<text  x="60"   y="338"  class="note">(bus GND)</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     +3.3V DISTRIBUTION NOTE
+     ════════════════════════════════════════════════════════════ -->
+<rect x="780" y="596" width="230" height="38" rx="3" fill="#fff9e6" stroke="#cc9900" stroke-width="1"/>
+<text x="790" y="611" class="val" fill="#7a6000">+3.3V rail: from Teensy onboard LDO</text>
+<text x="790" y="625" class="val" fill="#7a6000">→ OLED VCC · encoder pullups</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     VOLTAGE DIVIDER (TENSION BRIDGE) for inputs
+     ════════════════════════════════════════════════════════════ -->
+<rect x="780" y="470" width="240" height="110" rx="3" fill="#fafafa" stroke="#888" stroke-width="1"/>
+<text x="790" y="485" class="cmp" fill="#444">Input Protection Detail</text>
+<text x="790" y="498" class="val">(per CV/Gate input: CLK, RESET, DIR)</text>
+<!-- circuit sketch -->
+<text x="790" y="515" class="pin">Tip ──[10kΩ]──┬── Teensy pin (3.3V safe)</text>
+<text x="790" y="530" class="pin">              │</text>
+<text x="790" y="543" class="pin">           [BAT48]  anode=3.3V</text>
+<text x="790" y="556" class="pin">              │</text>
+<text x="790" y="569" class="pin">             GND</text>
+<text x="790" y="581" class="note">Clamps 5V Eurorack gates to safe 3.3V input</text>
+
+<!-- ════════════════════════════════════════════════════════════
+     LEGEND
+     ════════════════════════════════════════════════════════════ -->
+<rect x="10" y="770" width="1100" height="36" rx="3" fill="#f5f5f5" stroke="#ccc"/>
+<line x1="25"  y1="787" x2="65"  y2="787" stroke="#cc0000" stroke-width="2.5"/>
+<text x="70"  y="791" class="val" fill="#444">+12V bus</text>
+<line x1="150" y1="787" x2="190" y2="787" stroke="#ee6600" stroke-width="2.5"/>
+<text x="195" y="791" class="val" fill="#444">+5V (DC-DC)</text>
+<line x1="295" y1="787" x2="335" y2="787" stroke="#ddaa00" stroke-width="2.5"/>
+<text x="340" y="791" class="val" fill="#444">+3.3V (Teensy reg)</text>
+<line x1="460" y1="787" x2="500" y2="787" stroke="#444" stroke-width="2"/>
+<text x="505" y="791" class="val" fill="#444">GND</text>
+<line x1="555" y1="787" x2="595" y2="787" stroke="#0000bb" stroke-width="1.5"/>
+<text x="600" y="791" class="val" fill="#444">Digital signal 3.3V</text>
+<line x1="720" y1="787" x2="760" y2="787" stroke="#7700cc" stroke-width="1.5"/>
+<text x="765" y="791" class="val" fill="#444">I²C</text>
+<line x1="810" y1="787" x2="850" y2="787" stroke="#007700" stroke-width="1.5"/>
+<text x="855" y="791" class="val" fill="#444">Encoder</text>
+<line x1="930" y1="787" x2="970" y2="787" stroke="#0044aa" stroke-width="1.8"/>
+<text x="975" y="791" class="val" fill="#444">USB Host</text>
+</svg>
