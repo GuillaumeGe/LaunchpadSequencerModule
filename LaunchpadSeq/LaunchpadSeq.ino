@@ -57,6 +57,14 @@ extern "C" {
 #define OLED_RESET -1        // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 
+typedef enum MenuState {
+    kMenuState_Main,
+    kMenuState_PresetSelection,
+    kMenuState_Settings
+} MenuState;
+
+const uint8_t outputs[N_TRIGGERS] = { 30, 31, 32, 33, 34, 35, 36, 37 };
+
 // ── DISPLAY -─────────────────────────────────────────────────────────────────
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -80,8 +88,9 @@ IntervalTimer clockTimer;
 // and avoid calling digitalWrite / MIDI send from interrupt context.
 volatile bool pendingClockTick = false;
 volatile bool usbControllerConnected = false;
+volatile size_t selectionIndex = 0;   // for fun buttons and pattern/sequence selection
+volatile MenuState menuState = kMenuState_Main;
 
-const uint8_t outputs[N_TRIGGERS] = { 30, 31, 32, 33, 34, 35, 36, 37 };
 
 
 // ── Forward declarations ──────────────────────────────────────────────────────
@@ -379,9 +388,26 @@ void drawIcon(int16_t x, int16_t y, const uint8_t bitmap[], int16_t w, int16_t h
     display.drawBitmap(offset + x, y, bitmap,  ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
 }
 
-void drawMainScreen() {
-  display.clearDisplay();
-  display.setCursor((ICON_PADDING/2), 0);
+void drawPresetsMenu() {
+    display.clearDisplay();
+    display.setTextSize(FONT_SIZE);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println(F("Presets:"));
+    display.println(F("--------------------"));
+    for (size_t i = 0; i < LS_PRESETS_COUNT; i++) {
+        if (i == selectionIndex) {
+            display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);  // Draw 'inverse' text
+        } else {
+            display.setTextColor(SSD1306_WHITE);
+        }
+        display.println(ls_presets[i].name);
+    }
+    display.display();
+}
+
+void drawMainMenu() {
+    display.clearDisplay();
   
   /*
   _printCLK(sequencer_getClockDivider(&sequencer));
@@ -390,13 +416,26 @@ void drawMainScreen() {
   _printPRESET(1);
     */
   // e.g. top-right corner of the 128x32 display
-    drawIcon(0, 8, ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, true);
-    drawIcon(32, 8, ICON_PAUSE, ICON_WIDTH, ICON_HEIGHT, true);
-    drawIcon(64, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, true);
+
+    drawIcon(0, 8, sequencer_getState(&sequencer) == kSequencerState_Playing ? ICON_PAUSE : ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, true);
+    drawIcon(32, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, true);
+    drawIcon(64, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, true);
     drawIcon(96, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, true);
 
+    display.display();
+}
 
-  display.display();
+void updateOLEDDisplay() {
+    switch (menuState) {
+        case MenuState_Main:
+            drawMainMenu();
+            break;
+        case MenuState_PresetSelection:
+            drawPresetsMenu();
+            break;  
+        default:
+            break;
+    }
 }
 
 // ── Arduino entry points ──────────────────────────────────────────────────────
@@ -450,7 +489,7 @@ void setup() {
     // drawing commands to make them visible on screen!
     display.display();
 
-    drawMainScreen();
+    drawMainMenu();
 
     // Sequencer init
     sequencer_init(&sequencer);
