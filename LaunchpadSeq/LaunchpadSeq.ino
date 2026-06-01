@@ -490,9 +490,9 @@ void drawMainMenu() {
   // e.g. top-right corner of the 128x32 display
 
     drawIcon(0,  8, sequencer_getState(&sequencer) == kSequencerState_Playing ? ICON_PAUSE : ICON_PLAY, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 0);
-    drawIcon(32, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 1);
-    drawIcon(64, 8, sequencer_getDirection(&sequencer) == kDirection_Forward ? ICON_ARROW_RIGHT : ICON_ARROW_LEFT, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 2);
-    drawIcon(96, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 3);
+    drawIcon(30, 8, ICON_STOP, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 1);
+    drawIcon(60, 8, sequencer_getDirection(&sequencer) == kDirection_Forward ? ICON_ARROW_RIGHT : ICON_ARROW_LEFT, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 2);
+    drawIcon(90, 8, ICON_LETTER_P, ICON_WIDTH, ICON_HEIGHT, menuItemIndex == 3);
 
     display.display();
 }
